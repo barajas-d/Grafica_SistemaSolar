@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>My first three.js app</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+    <script src="StereoEffect.js"></script>
+    <script src="DeviceOrientationControls.js"></script>
+    <script>
+        // Our Javascript will go here.
+        //We need: scene, camera and render
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        //containers
+        var sunC = new THREE.Object3D();
+        var earthC = new THREE.Object3D();        
+
+        var renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        var effect = new THREE.StereoEffect(renderer);
+        effect.setSize(window.innerWidth, window.innerHeight);
+
+        var controls = new THREE.DeviceOrientationControls(camera);
+
+        //Textures
+        var materialG = new THREE.MeshBasicMaterial( { color: 0x00ff00} );//green
+        var loader = new THREE.TextureLoader();
+        var texture = loader.load("textura.jpg");
+        var material = new THREE.MeshStandardMaterial({
+            map: texture
+        });
+        var texture2 = loader.load("texSun.jpg");
+        var material2 = new THREE.MeshStandardMaterial({
+            map: texture2
+        });
+        var texture3 = loader.load("texMoon.jpg");
+        var material3 = new THREE.MeshStandardMaterial({
+            map: texture3
+        });
+
+        //Objects
+        var geometry = new THREE.SphereGeometry(10, 32, 32);
+        var sunO = new THREE.Mesh(geometry, materialG);
+        var geometry2 = new THREE.SphereGeometry(1, 32, 32);
+        var earthO = new THREE.Mesh(geometry2, materialG);
+        var geometry3 = new THREE.SphereGeometry(0.5, 32, 32);
+        var moonO = new THREE.Mesh(geometry3, materialG);
+
+        //Line
+        var material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+        //Line's geometry
+        var points = [];
+        points.push(new THREE.Vector3(0, 100, 0));
+        points.push(new THREE.Vector3(0, 0, 0));
+        points.push(new THREE.Vector3(100, 0, 0));
+        points.push(new THREE.Vector3(0, 0, 0));
+        points.push(new THREE.Vector3(0, 0, -100));
+
+        var geometry = new THREE.BufferGeometry().setFromPoints(points);
+        var line = new THREE.Line(geometry, material);
+
+        //Lights
+        var light = new THREE.PointLight(0xffffff, 1);
+        light.position.set(0, 50, 0);
+
+        //scene
+        camera.position.set(40, 60, 40);
+        camera.lookAt(0, 0, 0);
+        scene.add(light);
+
+        sunC.add(sunO);
+        earthC.add(earthO);
+        earthC.add(moonO);
+        sunC.add(earthC);
+
+        moonO.position.x = 2;
+
+        scene.add(sunC);
+        scene.add();
+
+        var t = 0.0;
+
+        //To see, we need render. Render or animate loop:
+        function animate() {
+            requestAnimationFrame(animate);
+
+            animateObjects(t);
+
+            t += 0.01;
+
+            //movement
+            //renderer.render(scene, camera);
+            controls.update();
+            effect.render(scene, camera);
+        }
+
+        function animateObjects(t){
+            rotate(sunO, 0.01);
+            rotate(earthO, 0.01);
+            rotate(moonO, 0.01);
+            translate(earthC, t, 20);
+            translate(moonO, 10*t, 5);
+        }
+
+        function rotate(object, speed){
+            object.rotation.y += speed;
+        }
+
+        function translate(object, t, r){
+            object.position.x = r*Math.cos(t);
+            object.position.z = r*Math.sin(t);
+        }
+
+        //animation
+        animate();
+    </script>
+</body>
+
+</html>
